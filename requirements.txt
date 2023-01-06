@@ -1,0 +1,2 @@
+vkwave @ https://github.com/fscdev/vkwave/archive/master.zip
+environs==9.5.0
