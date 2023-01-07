@@ -8,14 +8,14 @@ from verify import get_verify_func, verify_hello
 async def handle_main_menu(event: SimpleBotEvent):
 	user_id = event.user_id
 	msg = event.text.lower().strip()
-	api = event.api_ctx
-	user_data = (await api.users.get(user_ids=user_id, fields='country,city,bdate,sex')).response[0]
+	if not os.environ.get(f'{user_id}_FIRST_NAME'):
+		api = event.api_ctx
+		user_data = (await api.users.get(user_ids=user_id)).response[0]
+		os.environ[f'{user_id}_FIRST_NAME'] = user_data.first_name
+		os.environ[f'{user_id}_LAST_NAME'] = user_data.last_name
 	user_info = {
-		'user_id': user_id,
-		'city_id': None if not user_data.city else user_data.city.id,
-		'first_name': user_data.first_name,
-		'last_name': user_data.last_name,
-		'bdate': user_data.bdate,
+		'first_name': os.environ[f'{user_id}_FIRST_NAME'],
+		'last_name': os.environ[f'{user_id}_LAST_NAME']
 	}
 	if verify_hello(msg):
 		await send_hello(event, user_info)
