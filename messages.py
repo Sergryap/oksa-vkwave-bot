@@ -5,7 +5,7 @@ import requests
 import verify
 from typing import Union
 from vkwave.bots import SimpleBotEvent
-from buttons import get_button_func, get_main_menu
+from buttons import get_button_func, get_main_menu, menu
 from photos import photos
 from textwrap import dedent
 
@@ -19,9 +19,20 @@ COMMAND = f'''
            ✔️️ Про наши курсы - "ed"
            ✔️️ Начать с начала - "start"
            '''
+TIME_OFFSET = 0
+DAY_END_TIME = 18
+EVENING_END_TIME = 23
+MORNING_END_TIME = 11
+NIGHT_END_TIME = 6
 
 
-async def send_message(event: SimpleBotEvent, msg: str = None, buttons: Union[str, bool] = True):
+async def send_message(
+        event: SimpleBotEvent,
+        msg: str = None,
+        buttons: Union[str, bool] = True,
+        lat: int = None,
+        long: int = None
+):
     """
     Отправка сообщения пользователю.
     Если buttons=True создается клавиатура
@@ -34,30 +45,43 @@ async def send_message(event: SimpleBotEvent, msg: str = None, buttons: Union[st
         elif buttons:
             keyboard = get_main_menu()
     try:
-        await event.answer(
-            message=msg,
-            keyboard=keyboard
-        )
+        if lat and long:
+            api = event.api_ctx
+            user_id = event.user_id
+            await api.messages.send(
+                user_id=user_id,
+                random_id=random.randint(0, 1000),
+                message=msg,
+                keyboard=keyboard,
+                lat=lat,
+                long=long
+            )
+        else:
+            await event.answer(
+                message=msg,
+                keyboard=keyboard
+            )
     except requests.exceptions.ConnectionError:
         time.sleep(1)
-        await send_message(event, msg, buttons)
+        await send_message(event, msg, buttons, lat, long)
+
+
+def good_time():
+    tm = time.ctime()
+    pattern = re.compile(r"(\d+):\d+:\d+")
+    h = int(pattern.search(tm).group(1))
+    h = h + TIME_OFFSET if h + TIME_OFFSET < 24 else (h + TIME_OFFSET) % 24
+    if h < NIGHT_END_TIME:
+        return "Доброй ночи"
+    elif h < MORNING_END_TIME:
+        return "Доброе утро"
+    elif h < DAY_END_TIME:
+        return "Добрый день"
+    elif h <= EVENING_END_TIME:
+        return "Добрый вечер"
 
 
 async def send_hello(event: SimpleBotEvent, user_info):
-
-    def good_time():
-        tm = time.ctime()
-        pattern = re.compile(r"(\d+):\d+:\d+")
-        h = int(pattern.search(tm).group(1))
-        h = h + 5 if h < 19 else (h + 5) // 24
-        if h < 6:
-            return "Доброй ночи"
-        elif h < 11:
-            return "Доброе утро"
-        elif h < 18:
-            return "Добрый день"
-        elif h <= 23:
-            return "Добрый вечер"
 
     d = [
         '\nНапишите, что бы вы хотели или выберите.',
@@ -115,7 +139,7 @@ async def send_contact_admin(event: SimpleBotEvent, user_info):
             ✔ Email: oksarap@mail.ru
             ✔ Тел.: +7(919)442-35-36\n
             """
-    text2 = "Что вас еще интересует напишите или выберите ниже:"
+    text2 = "Что вас еще интересует, напишите или выберите ниже:"
     await send_message(event, msg=dedent(text))
     await send_message(event, msg=text2, buttons='menu')
 
@@ -133,19 +157,25 @@ async def send_site(event: SimpleBotEvent, user_info):
 async def send_address(event: SimpleBotEvent, user_info):
     text1 = f'''
              {user_info['first_name']}, мы находимся по адресу:
-             📍 г.Пермь, ул.Тургенева, д.23.
+             📍 г.Пермь, ул. Тургенева, д. 23.
              '''
     text2 = f'''
              Это малоэтажное кирпичное здание слева от ТЦ "Агат" 
              Вход через "Идеал-Лик", большой стеклянный тамбур
              Что вас еще интересует напишите или выберите ниже.
              '''
-    await send_message(event, msg=dedent(text1))
-    await send_photo(
+
+    await send_message(
         event,
-        photo_id='photo-195118308_457239030,photo-142029999_457243624'
+        msg=dedent(text1),
+        lat=58.017794,
+        long=56.293045
     )
-    await send_message(event, msg=dedent(text2), buttons='menu')
+    await event.answer(
+        message=dedent(text2),
+        attachment='photo-195118308_457239030',
+        keyboard=menu()
+    )
 
 
 async def send_bay_bay(event: SimpleBotEvent, user_info):
@@ -162,26 +192,18 @@ async def send_bay_bay(event: SimpleBotEvent, user_info):
     await send_message(event, msg=dedent(text), buttons='menu')
 
 
-async def send_work_example(event: SimpleBotEvent, user_info):
+async def send_work_example(event: SimpleBotEvent, user_info, photos_qty=5):
     text = f'''
             {user_info['first_name']}, больше работ здесь:
             vk.com/albums-142029999
-            Что вас еще интересует напишите или выберите ниже.
+            Что вас еще интересует, напишите или выберите ниже.
             '''
-    await send_photo(event)
-    await send_message(event, msg=dedent(text), buttons='send_photo')
 
-
-async def send_photo(event: SimpleBotEvent, photo_id=None):
-    attachment = photo_id if photo_id else await get_photos_example()
-    await event.answer(attachment=attachment)
-
-
-async def get_photos_example():
     attachment = ''
-    for photo in random.sample(photos, 5):
+    for photo in random.sample(photos, photos_qty):
         attachment += f"{photo},"
-    return attachment[:-1]
+    await event.answer(attachment=attachment)
+    await send_message(event, msg=dedent(text), buttons='send_photo')
 
 
 async def send_training(event: SimpleBotEvent, user_info):
