@@ -2,6 +2,16 @@ from vkwave.bots.utils.keyboards.keyboard import Keyboard
 from vkwave.bots.utils.keyboards.keyboard import ButtonColor
 
 
+BTN_DISCOUNT_STEP_4 = [
+        'По рекомендации',
+        'Через Google',
+        'Через Yandex',
+        'Нашла в 2Gis',
+        'Нашла в ВК',
+        'Нашла в Instagram',
+    ]
+
+
 def get_button_func():
     return {
         'send_photo': get_button_send_photo,
@@ -145,14 +155,7 @@ def get_entry_link():
 
 def get_search_our():
     keyboard = Keyboard(one_time=False, inline=True)
-    buttons = [
-        'По рекомендации',
-        'Через Google',
-        'Через Yandex',
-        'Нашла в 2Gis',
-        'Нашла в ВК',
-        'Нашла в Instagram'
-    ]
+    buttons = BTN_DISCOUNT_STEP_4
     btn_color = ButtonColor.SECONDARY
     for i, btn in enumerate(buttons, start=1):
         keyboard.add_text_button(btn, btn_color)

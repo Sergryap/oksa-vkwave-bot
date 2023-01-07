@@ -1,5 +1,6 @@
 import re
 import messages
+from buttons import BTN_DISCOUNT_STEP_4
 
 
 def get_verify_func():
@@ -94,6 +95,16 @@ def verify_fsm_quiz_on(msg, fsm_quiz=None):
         return bool(pattern_on.findall(msg) and not fsm_quiz)
     else:
         return bool(pattern_off.findall(msg) and fsm_quiz)
+
+
+def verify_fsm_start(msg):
+    pattern = re.compile(r'\b(?:анкета|заполнить анкету)\w*')
+    return bool(pattern.findall(msg))
+
+
+def verify_fsm_break(msg):
+    pattern = re.compile(r'\b(?:отмена|отменить|стоп|stop)\w*')
+    return bool(pattern.findall(msg))
 
 
 def verify_phone(msg):
