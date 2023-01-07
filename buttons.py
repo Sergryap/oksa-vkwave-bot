@@ -1,6 +1,24 @@
 from vkwave.bots.utils.keyboards.keyboard import Keyboard
 from vkwave.bots.utils.keyboards.keyboard import ButtonColor
 
+
+def get_button_func():
+    return {
+        'send_photo': get_button_send_photo,
+        'fsm_quiz': get_button_fsm_quiz,
+        'fsm_quiz_inline': get_button_fsm_quiz_inline,
+        'training_buttons': get_button_training,
+        'break': get_button_break,
+        'practic_extention': get_practic_extention,
+        'what_job': get_what_job,
+        'entry_link': get_entry_link,
+        'pass': get_button_pass,
+        'start': get_start_menu,
+        'search': get_search_our,
+        'menu': menu,
+    }
+
+
 def get_main_menu():
 
     keyboard = Keyboard(one_time=False, inline=False)
@@ -40,3 +58,112 @@ def get_start_menu():
         if i != len(buttons) and i % 2 == 0:
             keyboard.add_row()
     return keyboard.get_keyboard()
+
+
+def get_button_send_photo():
+    keyboard = Keyboard(one_time=False, inline=True)
+    buttons = ['Смoтреть еще', '☰ MENU']
+    btn_color = ButtonColor.PRIMARY
+    for btn in buttons:
+        keyboard.add_text_button(btn, btn_color)
+    return keyboard.get_keyboard()
+
+
+def get_button_fsm_quiz():
+    keyboard = Keyboard(one_time=False, inline=False)
+    buttons = ['Отмена', 'Пропустить']
+    btn_color = ButtonColor.PRIMARY
+    for btn in buttons:
+        keyboard.add_text_button(btn, btn_color)
+    return keyboard.get_keyboard()
+
+
+def get_button_fsm_quiz_inline():
+    keyboard = Keyboard(one_time=False, inline=True)
+    buttons = ['Пропустить']
+    btn_color = ButtonColor.PRIMARY
+    for btn in buttons:
+        keyboard.add_text_button(btn, btn_color)
+    return keyboard.get_keyboard()
+
+
+def get_button_training():
+    keyboard = Keyboard(one_time=False, inline=True)
+    keyboard.add_text_button('Заполнить анкету', ButtonColor.PRIMARY)
+    keyboard.add_row()
+    keyboard.add_text_button('☰ MENU', ButtonColor.SECONDARY)
+    return keyboard.get_keyboard()
+
+
+def get_button_break():
+    keyboard = Keyboard(one_time=False, inline=True)
+    buttons = ['Отменить']
+    btn_color = ButtonColor.PRIMARY
+    for btn in buttons:
+        keyboard.add_text_button(btn, btn_color)
+    return keyboard.get_keyboard()
+
+
+def get_button_pass():
+    keyboard = Keyboard(one_time=False, inline=True)
+    buttons_color = ButtonColor.PRIMARY
+    keyboard.add_text_button('Пропустить', buttons_color)
+    return keyboard.get_keyboard()
+
+
+def get_practic_extention():
+    keyboard = Keyboard(one_time=False, inline=True)
+    buttons = ['Да', 'Нет']
+    btn_color = ButtonColor.PRIMARY
+    for btn in buttons:
+        keyboard.add_text_button(btn, btn_color)
+    return keyboard.get_keyboard()
+
+
+def get_what_job():
+    keyboard = Keyboard(one_time=False, inline=True)
+    buttons = [
+        'Работаю в сфере красоты',
+        'Медицинский работник',
+        'Работаю в другой сфере',
+        'Домохозяйка',
+        'Учусь',
+    ]
+    btn_color = ButtonColor.SECONDARY
+    for i, btn in enumerate(buttons, start=1):
+        keyboard.add_text_button(btn, btn_color)
+        if i != len(buttons):
+            keyboard.add_row()
+    return keyboard.get_keyboard()
+
+
+def get_entry_link():
+    keyboard = Keyboard(one_time=False, inline=True)
+    keyboard.add_link_button(text='Запишись ONLINE', link='https://vk.com/app5688600_-142029999/')
+    return keyboard.get_keyboard()
+
+
+def get_search_our():
+    keyboard = Keyboard(one_time=False, inline=True)
+    buttons = [
+        'По рекомендации',
+        'Через Google',
+        'Через Yandex',
+        'Нашла в 2Gis',
+        'Нашла в ВК',
+        'Нашла в Instagram'
+    ]
+    btn_color = ButtonColor.SECONDARY
+    for i, btn in enumerate(buttons, start=1):
+        keyboard.add_text_button(btn, btn_color)
+        if i != len(buttons):
+            keyboard.add_row()
+    return keyboard.get_keyboard()
+
+
+def menu():
+    keyboard = Keyboard(one_time=False, inline=True)
+    buttons_color = ButtonColor.PRIMARY
+    keyboard.add_text_button('☰ MENU', buttons_color)
+    return keyboard.get_keyboard()
+
