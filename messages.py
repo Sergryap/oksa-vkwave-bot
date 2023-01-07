@@ -7,6 +7,7 @@ from typing import Union
 from vkwave.bots import SimpleBotEvent
 from buttons import get_button_func, get_main_menu
 from photos import photos
+from textwrap import dedent
 
 
 COMMAND = f'''
@@ -75,7 +76,7 @@ async def send_hello(event: SimpleBotEvent, user_info):
     t3 = f"{good_time()}, {user_info['first_name']}!\nЯ бот этого чата.\nРад видеть Вас у нас в гостях.\n"
     text = random.choice([t1, t2, t3])
 
-    if verify.verify_only_hello(event.text):
+    if verify.verify_only_hello(event.text.lower().strip()):
         await send_message(event, msg=text)
         await send_message(event, msg=f'{delta}', buttons='start')
     else:
@@ -84,14 +85,14 @@ async def send_hello(event: SimpleBotEvent, user_info):
 
 async def send_link_entry(event: SimpleBotEvent, user_info):
     text1 = f"""
-            {user_info['first_name']}, узнать о свободных местах, своих записях и/или записаться можно:\n
-            ✔️ Самостоятельно: https://dikidi.net/72910
-            ✔️ По тел. +7(919)442-35-36
-            ✔️ Через личные сообщения: @id9681859 (Оксана)
-            ✔ Дождаться сообщения от нашего менеджера\n
-            """
+             {user_info['first_name']}, узнать о свободных местах, своих записях и/или записаться можно:\n
+             ✔️ Самостоятельно: https://dikidi.net/72910
+             ✔️ По тел. +7(919)442-35-36
+             ✔️ Через личные сообщения: @id9681859 (Оксана)
+             ✔ Дождаться сообщения от нашего менеджера
+             """
     text2 = "Что вас еще интересует напишите или выберите ниже:"
-    await send_message(event, msg=text1, buttons='entry_link')
+    await send_message(event, msg=dedent(text1), buttons='entry_link')
     await send_message(event, msg=text2, buttons='menu')
 
 
@@ -101,8 +102,8 @@ async def send_price(event: SimpleBotEvent, user_info):
             ✔️ vk.com/uslugi-142029999\n
             """
     text2 = "Что вас еще интересует напишите или выберите ниже:"
-    await send_message(event, msg=text)
-    await send_message(event, msg='start')
+    await send_message(event, msg=dedent(text))
+    await send_message(event, msg=text2, buttons='start')
 
 
 async def send_contact_admin(event: SimpleBotEvent, user_info):
@@ -115,7 +116,7 @@ async def send_contact_admin(event: SimpleBotEvent, user_info):
             ✔ Тел.: +7(919)442-35-36\n
             """
     text2 = "Что вас еще интересует напишите или выберите ниже:"
-    await send_message(event, msg=text)
+    await send_message(event, msg=dedent(text))
     await send_message(event, msg=text2, buttons='menu')
 
 
@@ -130,39 +131,45 @@ async def send_site(event: SimpleBotEvent, user_info):
 
 
 async def send_address(event: SimpleBotEvent, user_info):
-    text1 = f"""
-             {user_info['first_name']}, мы находимся по адресу:\n
-             📍 г.Пермь, ул.Тургенева, д.23.\n
-             """
-    text2 = f"""
+    text1 = f'''
+             {user_info['first_name']}, мы находимся по адресу:
+             📍 г.Пермь, ул.Тургенева, д.23.
+             '''
+    text2 = f'''
              Это малоэтажное кирпичное здание слева от ТЦ "Агат" 
-             Вход через "Идеал-Лик", большой стеклянный тамбур\n
-             Что вас еще интересует напишите или выберите ниже.\n
-             """
-    await send_message(event, msg=text1)
+             Вход через "Идеал-Лик", большой стеклянный тамбур
+             Что вас еще интересует напишите или выберите ниже.
+             '''
+    await send_message(event, msg=dedent(text1))
     await send_photo(
         event,
         photo_id='photo-195118308_457239030,photo-142029999_457243624'
     )
-    await send_message(event, msg=text2, buttons='menu')
+    await send_message(event, msg=dedent(text2), buttons='menu')
 
 
 async def send_bay_bay(event: SimpleBotEvent, user_info):
-    text1 = f"До свидания, {user_info['first_name']}. Будем рады видеть вас снова!"
-    text2 = f"До скорых встреч, {user_info['first_name']}. Было приятно с Вами пообщаться. Ждём вас снова!"
-    text3 = f"Всего доброго Вам, {user_info['first_name']}. Надеюсь мы ответили на Ваши вопросы. Ждём вас снова! До скорых встреч."
+    text1 = f'До свидания, {user_info["first_name"]}. Будем рады видеть вас снова!'
+    text2 = f'''
+             До скорых встреч, {user_info["first_name"]}.
+             Было приятно с Вами пообщаться. Ждём вас снова!
+             '''
+    text3 = f'''
+             Всего доброго Вам, {user_info["first_name"]}.
+             Надеюсь мы ответили на Ваши вопросы. Ждём вас снова! До скорых встреч.
+             '''
     text = random.choice([text1, text2, text3])
-    await send_message(event, msg=text, buttons='menu')
+    await send_message(event, msg=dedent(text), buttons='menu')
 
 
 async def send_work_example(event: SimpleBotEvent, user_info):
-    text = f"""
+    text = f'''
             {user_info['first_name']}, больше работ здесь:
             vk.com/albums-142029999
             Что вас еще интересует напишите или выберите ниже.
-            """
+            '''
     await send_photo(event)
-    await send_message(event, msg=text, buttons='send_photo')
+    await send_message(event, msg=dedent(text), buttons='send_photo')
 
 
 async def send_photo(event: SimpleBotEvent, photo_id=None):
@@ -178,23 +185,25 @@ async def get_photos_example():
 
 
 async def send_training(event: SimpleBotEvent, user_info):
-    text = \
-        f"{user_info['first_name']}, получить подробную информацию о предстоящих курсах" \
-        f" и/или записаться вы можете, заполнив анкету предварительной записи," \
-        f" которая вас ни к чему не обязывает."
+    text = f'''
+            {user_info['first_name']}, получить подробную информацию о предстоящих курсах
+            и/или записаться вы можете, заполнив анкету предварительной записи,
+            которая вас ни к чему не обязывает.
+            '''
 
-    await send_message(event, msg=text, buttons='training_buttons')
+    await send_message(event, msg=dedent(text), buttons='training_buttons')
 
 
 async def send_discount(event: SimpleBotEvent, user_info):
-    text = \
-        f"{user_info['first_name']}, заполните анкету и получите скидку на первое посещение 15%.\n" \
-        f"Скидка доступна только для первой записи в нашу студию.\n" \
-        f"Будем рады вас видеть!"
+    text = f'''
+            {user_info['first_name']}, заполните анкету и получите скидку на первое посещение 15%.
+            Скидка доступна только для первой записи в нашу студию.
+            Будем рады вас видеть!
+            '''
 
-    await send_message(event, msg=text, buttons='training_buttons')
+    await send_message(event, msg=dedent(text), buttons='training_buttons')
 
 
-async def send_menu(event: SimpleBotEvent):
+async def send_menu(event: SimpleBotEvent, user_info):
     text = "Выберите ниже:"
     await send_message(event, msg=text, buttons='start')

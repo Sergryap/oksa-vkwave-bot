@@ -19,7 +19,7 @@ def get_verify_func():
 
 def verify_hello(msg):
     """Проверка сообщения на приветствие"""
-    pattern = re.compile(r'\b(?:приве?т|здрав?ств?уй|добрый|доброго\s*времени|рад[а?]\s*видеть|start)\w*')
+    pattern = re.compile(r'\b(?:приве?т|здрав?ств?уй|добрый|доброго\s*времени|рад[а?]\s*видеть|start|старт|начать)\w*')
     return bool(pattern.findall(msg))
 
 
@@ -106,3 +106,7 @@ def verify_discount(msg, msg_previous=None):
     if msg_previous:
         return bool(pattern.findall(msg_previous) or msg_previous == 'discount')
     return bool(pattern.findall(msg) or msg == 'discount')
+
+
+if __name__ == '__main__':
+    print(verify_entry('записаться'))
