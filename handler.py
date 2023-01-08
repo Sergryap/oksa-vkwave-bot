@@ -4,7 +4,13 @@ from vkwave.bots import SimpleBotEvent
 from vkwave.bots.storage.storages import Storage
 from vkwave.bots.storage.types import Key
 from textwrap import dedent
-from messages import send_hello, send_discount, send_message, send_menu
+from messages import (
+	send_hello,
+	send_discount,
+	send_message,
+	send_menu,
+	send_training,
+)
 from verify import (
 	get_verify_func,
 	verify_hello,
@@ -12,7 +18,8 @@ from verify import (
 	verify_menu,
 	verify_fsm_break,
 	verify_phone,
-	verify_fsm_start
+	verify_fsm_start,
+	verify_training,
 )
 from buttons import BTN_DISCOUNT_STEP_4
 
@@ -21,6 +28,7 @@ storage = Storage()
 USER_MSG = []
 MAX_SEND_ADMIN_MSG = 5
 CANCELLATION_MESSAGE = 'Вы можете продолжить в любое время. Просто отправьте "получить скидку"'
+CANCELLATION_MSG_TR_SURVEY = 'Вы можете продолжить в любое время. Просто отправьте "обучение" или "ed"'
 
 
 async def get_initial_data(event: SimpleBotEvent):
@@ -41,7 +49,10 @@ async def handle_main_menu(event: SimpleBotEvent):
 
 	if verify_discount(msg):
 		await send_discount(event, user_info)
-		return 'DISCOUNT_1'
+		return 'DISCOUNT_SURVEY_1'
+	elif verify_training(msg):
+		await send_training(event, user_info)
+		return 'TRAINING_SURVEY_1'
 
 	for verify_msg, send_msg_func in get_verify_func().items():
 		if verify_msg(msg):
@@ -50,6 +61,7 @@ async def handle_main_menu(event: SimpleBotEvent):
 	return 'START'
 
 
+# далее идут шаги по заполнению анкеты на скидку новичкам
 async def handle_discount_step_1(event: SimpleBotEvent):
 	user_id, msg, user_info = await get_initial_data(event)
 	if verify_fsm_start(msg):
@@ -57,7 +69,7 @@ async def handle_discount_step_1(event: SimpleBotEvent):
 		discount_msg = f'vk: https://vk.com/id{user_id}\n'
 		await storage.put(Key(f'{user_id}_discount'), discount_msg)
 		await send_message(event, msg=text, buttons='fsm_quiz')
-		return 'DISCOUNT_2'
+		return 'DISCOUNT_SURVEY_2'
 	else:
 		if verify_hello(msg):
 			await send_hello(event, user_info)
@@ -79,13 +91,13 @@ async def handle_discount_step_2(event: SimpleBotEvent):
 	elif not verify_phone(msg):
 		text = 'Укажите номер телефона в верном формате, например: 7(999)999-99-99. Либо отмените заполнение анкеты'
 		await send_message(event, msg=text, buttons='fsm_quiz')
-		return 'DISCOUNT_2'
+		return 'DISCOUNT_SURVEY_2'
 	else:
 		discount_msg = await storage.get(Key(f'{user_id}_discount')) + f'phone: {msg}\n'
 		await storage.put(Key(f'{user_id}_discount'), discount_msg)
 		text = '2. Введите ваше имя'
 		await send_message(event, msg=text, buttons='fsm_quiz')
-		return 'DISCOUNT_3'
+		return 'DISCOUNT_SURVEY_3'
 
 
 async def handle_discount_step_3(event: SimpleBotEvent):
@@ -100,7 +112,7 @@ async def handle_discount_step_3(event: SimpleBotEvent):
 		await storage.put(Key(f'{user_id}_discount'), discount_msg)
 		text = '3. Как вы нас нашли? Выберите ниже, либо напишите свой вариант'
 		await send_message(event, msg=text, buttons='search')
-		return 'DISCOUNT_4'
+		return 'DISCOUNT_SURVEY_4'
 
 
 async def handle_discount_step_4(event: SimpleBotEvent):
@@ -113,13 +125,13 @@ async def handle_discount_step_4(event: SimpleBotEvent):
 	elif msg not in [msg.lower() for msg in BTN_DISCOUNT_STEP_4]:
 		text = f'{user_info["first_name"]}, данный пункт обязателен к заполнению. Укажите вариант, либо отмените заполнение анкеты'
 		await send_message(event, msg=text, buttons='search')
-		return 'DISCOUNT_4'
+		return 'DISCOUNT_SURVEY_4'
 	else:
 		discount_msg = await storage.get(Key(f'{user_id}_discount')) + f'search: {msg}\n'
 		await storage.put(Key(f'{user_id}_discount'), discount_msg)
 		text = '4. Кем вы сейчас работаете или чем занимаетесь? Выберите ниже или напишите свой вариант.'
 		await send_message(event, msg=text, buttons='what_job')
-		return 'DISCOUNT_5'
+		return 'DISCOUNT_SURVEY_5'
 
 
 async def handle_discount_step_5(event: SimpleBotEvent):
@@ -134,7 +146,7 @@ async def handle_discount_step_5(event: SimpleBotEvent):
 		await storage.put(Key(f'{user_id}_discount'), discount_msg)
 		text = '5. Укажите ваш возраст, либо пропустите данный пункт.'
 		await send_message(event, msg=text, buttons='fsm_quiz')
-		return 'DISCOUNT_6'
+		return 'DISCOUNT_SURVEY_6'
 
 
 async def handle_discount_step_6(event: SimpleBotEvent):
@@ -167,7 +179,132 @@ async def handle_discount_step_6(event: SimpleBotEvent):
 				Либо отмените заполнение анкеты.
 				'''
 		await send_message(event, msg=dedent(text), buttons='fsm_quiz')
-		return 'DISCOUNT_6'
+		return 'DISCOUNT_SURVEY_6'
+
+
+# далее идут шаги по заполнению анкеты на обучение
+async def handle_training_survey_step_1(event: SimpleBotEvent):
+	user_id, msg, user_info = await get_initial_data(event)
+	if verify_fsm_start(msg):
+		text = f'1. {user_info["first_name"]}, оставьте пожалуйста ваш контактный номер телефона:'
+		training_survey_msg = f'vk: https://vk.com/id{user_id}\n'
+		await storage.put(Key(f'{user_id}_training_survey'), training_survey_msg)
+		await send_message(event, msg=text, buttons='fsm_quiz')
+		return 'TRAINING_SURVEY_2'
+	else:
+		if verify_hello(msg):
+			await send_hello(event, user_info)
+
+		for verify_msg, send_msg_func in get_verify_func().items():
+			if verify_msg(msg):
+				await send_msg_func(event, user_info)
+
+		return 'START'
+
+
+async def handle_training_survey_step_2(event: SimpleBotEvent):
+	user_id, msg, user_info = await get_initial_data(event)
+	if verify_fsm_break(msg):
+		text = f'{user_info["first_name"]} {CANCELLATION_MSG_TR_SURVEY}'
+		await send_message(event, msg=text)
+		await send_menu(event, user_info)
+		return 'START'
+	elif not verify_phone(msg):
+		text = 'Укажите номер телефона в верном формате, например: 7(999)999-99-99. Либо отмените заполнение анкеты'
+		await send_message(event, msg=text, buttons='fsm_quiz')
+		return 'TRAINING_SURVEY_2'
+	else:
+		training_survey_msg = await storage.get(Key(f'{user_id}_training_survey')) + f'phone: {msg}\n'
+		await storage.put(Key(f'{user_id}_training_survey'), training_survey_msg)
+		text = '2. Введите ваше имя'
+		await send_message(event, msg=text, buttons='fsm_quiz')
+		return 'TRAINING_SURVEY_3'
+
+
+async def handle_training_survey_step_3(event: SimpleBotEvent):
+	user_id, msg, user_info = await get_initial_data(event)
+	if verify_fsm_break(msg):
+		text = f'{user_info["first_name"]} {CANCELLATION_MSG_TR_SURVEY}'
+		await send_message(event, msg=text)
+		await send_menu(event, user_info)
+		return 'START'
+	else:
+		training_survey_msg = await storage.get(Key(f'{user_id}_training_survey')) + f'name: {msg}\n'
+		await storage.put(Key(f'{user_id}_training_survey'), training_survey_msg)
+		text = '3. Вы уже имеете опыт в наращивании ресниц?'
+		await send_message(event, msg=text, buttons='practic_extention')
+		return 'TRAINING_SURVEY_4'
+
+
+async def handle_training_survey_step_4(event: SimpleBotEvent):
+	user_id, msg, user_info = await get_initial_data(event)
+	if verify_fsm_break(msg):
+		text = f'{user_info["first_name"]} {CANCELLATION_MSG_TR_SURVEY}'
+		await send_message(event, msg=text)
+		await send_menu(event, user_info)
+		return 'START'
+	elif msg in ['да', 'нет']:
+		training_survey_msg = await storage.get(Key(f'{user_id}_training_survey')) + f'practice: {msg}\n'
+		await storage.put(Key(f'{user_id}_training_survey'), training_survey_msg)
+		text = '4. Кем вы сейчас работаете или чем занимаетесь? Выберите ниже или напишите свой вариант.'
+		await send_message(event, msg=text, buttons='what_job')
+		return 'TRAINING_SURVEY_5'
+	else:
+		text = f'''
+				{user_info["first_name"]}, данный пункт обязателен к заполнению.
+				Укажите вариант, либо отмените заполнение анкеты.
+				Вы уже имеете опыт в наращивании ресниц?
+				'''
+		await send_message(event, msg=dedent(text), buttons='practic_extention')
+		return 'TRAINING_SURVEY_4'
+
+
+async def handle_training_survey_step_5(event: SimpleBotEvent):
+	user_id, msg, user_info = await get_initial_data(event)
+	if verify_fsm_break(msg):
+		text = f'{user_info["first_name"]} {CANCELLATION_MSG_TR_SURVEY}'
+		await send_message(event, msg=text)
+		await send_menu(event, user_info)
+		return 'START'
+	else:
+		training_survey_msg = await storage.get(Key(f'{user_id}_training_survey')) + f'work: {msg}\n'
+		await storage.put(Key(f'{user_id}_training_survey'), training_survey_msg)
+		text = '5. Укажите ваш возраст, либо пропустите данный пункт.'
+		await send_message(event, msg=text, buttons='fsm_quiz')
+		return 'TRAINING_SURVEY_6'
+
+
+async def handle_training_survey_step_6(event: SimpleBotEvent):
+	user_id, msg, user_info = await get_initial_data(event)
+	if verify_fsm_break(msg):
+		text = f'{user_info["first_name"]} {CANCELLATION_MSG_TR_SURVEY}'
+		await send_message(event, msg=text)
+		await send_menu(event, user_info)
+		return 'START'
+	elif msg == "пропустить" or (msg.isdigit() and 10 < int(msg) < 100):
+		training_survey_msg = await storage.get(Key(f'{user_id}_training_survey')) + f'age: {msg}'
+		await storage.put(Key(f'{user_id}_training_survey'), training_survey_msg)
+		api = event.api_ctx
+		text = f'''
+				Спасибо, {user_info["first_name"]}, мы обязательно свяжемся с вами.
+				Сообщим всю необходимую информацию о наших курсах и подберем подходящий Вам вариант.
+				'''
+		await send_message(event, msg=dedent(text))
+		msg_head = f'АНКЕТА НА ОБУЧЕНИЕ:\n'
+		await api.messages.send(
+			random_id=random.randint(0, 1000),
+			user_ids=os.environ['ADMIN_IDS'].split(),
+			message=msg_head + training_survey_msg
+		)
+		await storage.delete(Key(f'{user_id}_training_survey'))
+		return 'START'
+	else:
+		text = f'''
+				{user_info["first_name"]}, укажите правильное значение, или пропустите данный пункт.
+				Либо отмените заполнение анкеты.
+				'''
+		await send_message(event, msg=dedent(text), buttons='fsm_quiz')
+		return 'TRAINING_SURVEY_6'
 
 
 async def handle_users_reply(event: SimpleBotEvent):
@@ -196,12 +333,18 @@ async def handle_users_reply(event: SimpleBotEvent):
 		user_state = await storage.get(Key(f'{user_id}_next_state'), default='START')
 	states_functions = {
 		'START': handle_main_menu,
-		'DISCOUNT_1': handle_discount_step_1,
-		'DISCOUNT_2': handle_discount_step_2,
-		'DISCOUNT_3': handle_discount_step_3,
-		'DISCOUNT_4': handle_discount_step_4,
-		'DISCOUNT_5': handle_discount_step_5,
-		'DISCOUNT_6': handle_discount_step_6,
+		'DISCOUNT_SURVEY_1': handle_discount_step_1,
+		'DISCOUNT_SURVEY_2': handle_discount_step_2,
+		'DISCOUNT_SURVEY_3': handle_discount_step_3,
+		'DISCOUNT_SURVEY_4': handle_discount_step_4,
+		'DISCOUNT_SURVEY_5': handle_discount_step_5,
+		'DISCOUNT_SURVEY_6': handle_discount_step_6,
+		'TRAINING_SURVEY_1': handle_training_survey_step_1,
+		'TRAINING_SURVEY_2': handle_training_survey_step_2,
+		'TRAINING_SURVEY_3': handle_training_survey_step_3,
+		'TRAINING_SURVEY_4': handle_training_survey_step_4,
+		'TRAINING_SURVEY_5': handle_training_survey_step_5,
+		'TRAINING_SURVEY_6': handle_training_survey_step_6,
 	}
 	state_handler = states_functions[user_state]
 	await storage.put(Key(f'{user_id}_next_state'), value=await state_handler(event))
