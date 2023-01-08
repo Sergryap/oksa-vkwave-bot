@@ -123,8 +123,11 @@ async def handle_discount_step_4(event: SimpleBotEvent):
 		await send_menu(event, user_info)
 		return 'START'
 	elif msg not in [msg.lower() for msg in BTN_DISCOUNT_STEP_4]:
-		text = f'{user_info["first_name"]}, данный пункт обязателен к заполнению. Укажите вариант, либо отмените заполнение анкеты'
-		await send_message(event, msg=text, buttons='search')
+		text = f'''
+				{user_info["first_name"]}, данный пункт обязателен к заполнению.
+				Укажите вариант, либо отмените заполнение анкеты:
+				'''
+		await send_message(event, msg=dedent(text), buttons='search')
 		return 'DISCOUNT_SURVEY_4'
 	else:
 		discount_msg = await storage.get(Key(f'{user_id}_discount')) + f'search: {msg}\n'
