@@ -27,7 +27,7 @@ from buttons import BTN_DISCOUNT_STEP_4, FEEDBACK_BUTTONS
 storage = Storage()
 
 USER_MSG = []
-MAX_SEND_ADMIN_MSG = 5
+MAX_SEND_ADMIN_MSG = 10
 CANCELLATION_MESSAGE = 'Вы можете продолжить в любое время. Просто отправьте "получить скидку"'
 CANCELLATION_MSG_TR_SURVEY = 'Вы можете продолжить в любое время. Просто отправьте "обучение" или "ed"'
 CANCELLATION_FEEDBACK = 'Вы можете продолжить в любое время.'
@@ -504,7 +504,7 @@ async def handle_feedback_step_8(event: SimpleBotEvent):
 		await storage.delete(Key(f'{user_id}_feedback'))
 		api = event.api_ctx
 		text = f'''
-				Спасибо, {user_info["first_name"]} за ваши ответы.
+				Спасибо, {user_info["first_name"]}, за ваши ответы.
 				Мы обязательно учтем ваше мнение, чтобы сделать наши услуги еще лучше.
 				'''
 		await send_message(event, msg=dedent(text))
@@ -531,7 +531,7 @@ async def handle_users_reply(event: SimpleBotEvent):
 	text = f'от https://vk.com/id{user_id}: "{event.text}"'
 	USER_MSG.append(text)
 	if len(USER_MSG) == MAX_SEND_ADMIN_MSG:
-		msg_head = f'Сообщения в чате https://vk.com/gim142029999:'
+		msg_head = f'Сообщения в чате https://vk.com/gim{os.environ["GROUP_ID"]}:'
 		await api.messages.send(
 			random_id=random.randint(0, 1000),
 			user_ids=os.environ['ADMIN_IDS'].split(),
