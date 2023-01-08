@@ -27,7 +27,7 @@ from buttons import BTN_DISCOUNT_STEP_4, FEEDBACK_BUTTONS
 storage = Storage()
 
 USER_MSG = []
-MAX_SEND_ADMIN_MSG = 10
+MAX_SEND_ADMIN_MSG = 5
 CANCELLATION_MESSAGE = 'Вы можете продолжить в любое время. Просто отправьте "получить скидку"'
 CANCELLATION_MSG_TR_SURVEY = 'Вы можете продолжить в любое время. Просто отправьте "обучение" или "ed"'
 CANCELLATION_FEEDBACK = 'Вы можете продолжить в любое время.'
