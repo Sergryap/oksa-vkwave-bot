@@ -291,7 +291,7 @@ async def handle_training_survey_step_6(event: SimpleBotEvent):
 		return 'START'
 	elif msg == "пропустить" or (msg.isdigit() and 10 < int(msg) < 100):
 		training_survey_msg = await storage.get(Key(f'{user_id}_training_survey')) + f'age: {msg}'
-		await storage.put(Key(f'{user_id}_training_survey'), training_survey_msg)
+		await storage.delete(Key(f'{user_id}_training_survey'))
 		api = event.api_ctx
 		text = f'''
 				Спасибо, {user_info["first_name"]}, мы обязательно свяжемся с вами.
@@ -304,7 +304,6 @@ async def handle_training_survey_step_6(event: SimpleBotEvent):
 			user_ids=os.environ['ADMIN_IDS'].split(),
 			message=msg_head + training_survey_msg
 		)
-		await storage.delete(Key(f'{user_id}_training_survey'))
 		return 'START'
 	else:
 		text = f'''
@@ -315,6 +314,7 @@ async def handle_training_survey_step_6(event: SimpleBotEvent):
 		return 'TRAINING_SURVEY_6'
 
 
+# далее идут шаги по заполнению анкеты отзыва
 async def handle_feedback_step_1(event: SimpleBotEvent):
 	user_id, msg, user_info = await get_initial_data(event)
 	if verify_fsm_start(msg):
