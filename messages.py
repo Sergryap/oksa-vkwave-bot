@@ -20,7 +20,7 @@ COMMAND = f'''
            ✔️️ Про наши курсы - "ed"
            ✔️️ Начать с начала - "start"
            '''
-TIME_OFFSET = 0
+TIME_OFFSET = 5
 DAY_END_TIME = 18
 EVENING_END_TIME = 23
 MORNING_END_TIME = 11
