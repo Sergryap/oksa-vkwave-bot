@@ -3,6 +3,7 @@ import time
 import re
 import requests
 import verify
+import os
 from typing import Union
 from vkwave.bots import SimpleBotEvent
 from buttons import get_button_func, get_main_menu, menu
@@ -118,6 +119,13 @@ async def send_link_entry(event: SimpleBotEvent, user_info):
     text2 = "Что вас еще интересует напишите или выберите ниже:"
     await send_message(event, msg=dedent(text1), buttons='entry_link')
     await send_message(event, msg=text2, buttons='menu')
+    api = event.api_ctx
+    admin_msg = f'Клиент "{user_info["first_name"]}" записывается в чате: https://vk.com/gim{os.environ["GROUP_ID"]}'
+    await api.messages.send(
+        random_id=random.randint(0, 1000),
+        user_ids=os.environ['ADMIN_IDS'].split(),
+        message=admin_msg
+    )
 
 
 async def send_price(event: SimpleBotEvent, user_info):
