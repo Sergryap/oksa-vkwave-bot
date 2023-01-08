@@ -1,5 +1,6 @@
 from vkwave.bots.utils.keyboards.keyboard import Keyboard
 from vkwave.bots.utils.keyboards.keyboard import ButtonColor
+from vkwave.bots import SimpleBotEvent
 
 
 BTN_DISCOUNT_STEP_4 = [
@@ -10,6 +11,8 @@ BTN_DISCOUNT_STEP_4 = [
         'Нашла в ВК',
         'Нашла в Instagram',
     ]
+
+FEEDBACK_BUTTONS = ['Да', 'Нет', 'Скорее да', 'Скорее нет']
 
 
 def get_button_func():
@@ -26,6 +29,9 @@ def get_button_func():
         'start': get_start_menu,
         'search': get_search_our,
         'menu': menu,
+        'feedback': get_feedback,
+        'feedback_assessment': get_feedback_assessment,
+        'feedback_continue': get_feedback_continue
     }
 
 
@@ -67,6 +73,9 @@ def get_start_menu():
             keyboard.add_text_button(btn, btn_finish)
         if i != len(buttons) and i % 2 == 0:
             keyboard.add_row()
+    keyboard.add_row()
+    keyboard.add_text_button('Ваше мнение о нас', payload={'button': 'feedback'})
+
     return keyboard.get_keyboard()
 
 
@@ -161,6 +170,32 @@ def get_search_our():
         keyboard.add_text_button(btn, btn_color)
         if i != len(buttons):
             keyboard.add_row()
+    return keyboard.get_keyboard()
+
+
+def get_feedback():
+    keyboard = Keyboard(one_time=False, inline=True)
+    buttons = FEEDBACK_BUTTONS
+    btn_color = ButtonColor.PRIMARY
+    for i, btn in enumerate(buttons, start=1):
+        keyboard.add_text_button(btn, btn_color)
+        if i % 2 == 0 and i != len(FEEDBACK_BUTTONS):
+            keyboard.add_row()
+    return keyboard.get_keyboard()
+
+
+def get_feedback_assessment():
+    keyboard = Keyboard(one_time=False, inline=True)
+    for i in range(10, 0, -1):
+        keyboard.add_text_button(str(i), ButtonColor.SECONDARY)
+        if i == 6:
+            keyboard.add_row()
+    return keyboard.get_keyboard()
+
+
+def get_feedback_continue():
+    keyboard = Keyboard(one_time=False, inline=True)
+    keyboard.add_text_button('Пропустить')
     return keyboard.get_keyboard()
 
 

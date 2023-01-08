@@ -10,6 +10,7 @@ from messages import (
 	send_message,
 	send_menu,
 	send_training,
+	send_feedback_start,
 )
 from verify import (
 	get_verify_func,
@@ -21,7 +22,7 @@ from verify import (
 	verify_fsm_start,
 	verify_training,
 )
-from buttons import BTN_DISCOUNT_STEP_4
+from buttons import BTN_DISCOUNT_STEP_4, FEEDBACK_BUTTONS
 
 storage = Storage()
 
@@ -29,6 +30,7 @@ USER_MSG = []
 MAX_SEND_ADMIN_MSG = 5
 CANCELLATION_MESSAGE = 'Вы можете продолжить в любое время. Просто отправьте "получить скидку"'
 CANCELLATION_MSG_TR_SURVEY = 'Вы можете продолжить в любое время. Просто отправьте "обучение" или "ed"'
+CANCELLATION_FEEDBACK = 'Вы можете продолжить в любое время.'
 
 
 async def get_initial_data(event: SimpleBotEvent):
@@ -53,6 +55,9 @@ async def handle_main_menu(event: SimpleBotEvent):
 	elif verify_training(msg):
 		await send_training(event, user_info)
 		return 'TRAINING_SURVEY_1'
+	elif event.payload and event.payload['button'] == 'feedback':
+		await send_feedback_start(event, user_info)
+		return 'FEEDBACK_SURVEY_1'
 
 	for verify_msg, send_msg_func in get_verify_func().items():
 		if verify_msg(msg):
@@ -310,6 +315,210 @@ async def handle_training_survey_step_6(event: SimpleBotEvent):
 		return 'TRAINING_SURVEY_6'
 
 
+async def handle_feedback_step_1(event: SimpleBotEvent):
+	user_id, msg, user_info = await get_initial_data(event)
+	if verify_fsm_start(msg):
+		text = f'1. {user_info["first_name"]}, Ваш мастер приступил к работе вовремя?'
+		feedback_msg = f'vk: https://vk.com/id{user_id}\n'
+		await storage.put(Key(f'{user_id}_feedback'), feedback_msg)
+		await send_message(event, msg='Ответьте на следующие вопросы, пожалуйста:', buttons='fsm_quiz')
+		await send_message(event, msg=text, buttons='feedback')
+		return 'FEEDBACK_SURVEY_2'
+	else:
+		if verify_hello(msg):
+			await send_hello(event, user_info)
+
+		for verify_msg, send_msg_func in get_verify_func().items():
+			if verify_msg(msg):
+				await send_msg_func(event, user_info)
+
+		return 'START'
+
+
+async def handle_feedback_step_2(event: SimpleBotEvent):
+	user_id, msg, user_info = await get_initial_data(event)
+	if verify_fsm_break(msg):
+		text = f'{user_info["first_name"]} {CANCELLATION_FEEDBACK}'
+		await send_message(event, msg=text)
+		await send_menu(event, user_info)
+		return 'START'
+	elif msg not in [i.lower() for i in FEEDBACK_BUTTONS]:
+		text = f'''
+				{user_info['first_name']}, данный пункт обязателен к заполнению.
+				Укажите вариант, либо отмените заполнение анкеты.
+				1. Ваш мастер приступил к работе вовремя?
+				'''
+		await send_message(event, msg=dedent(text), buttons='feedback')
+		return 'FEEDBACK_SURVEY_2'
+	else:
+		feedback_msg = await storage.get(Key(f'{user_id}_feedback')) + f'Мастер приступил вовремя: {msg}\n'
+		await storage.put(Key(f'{user_id}_feedback'), feedback_msg)
+		text = '2. Считаете ли вы, что получили подробную консультацию до оказания услуги?'
+		await send_message(event, msg=text, buttons='feedback')
+		return 'FEEDBACK_SURVEY_3'
+
+
+async def handle_feedback_step_3(event: SimpleBotEvent):
+	user_id, msg, user_info = await get_initial_data(event)
+	if verify_fsm_break(msg):
+		text = f'{user_info["first_name"]} {CANCELLATION_FEEDBACK}'
+		await send_message(event, msg=text)
+		await send_menu(event, user_info)
+		return 'START'
+	elif msg not in [i.lower() for i in FEEDBACK_BUTTONS]:
+		text = f'''
+				{user_info['first_name']}, данный пункт обязателен к заполнению.
+				Укажите вариант, либо отмените заполнение анкеты.
+				2. Считаете ли вы, что получили подробную консультацию до оказания услуги?
+				'''
+		await send_message(event, msg=dedent(text), buttons='feedback')
+		return 'FEEDBACK_SURVEY_3'
+	else:
+		feedback_msg = await storage.get(Key(f'{user_id}_feedback')) + f'Консультация до: {msg}\n'
+		await storage.put(Key(f'{user_id}_feedback'), feedback_msg)
+		text = '3. Правильно ли ваш мастер понял, что вы хотите?'
+		await send_message(event, msg=text, buttons='feedback')
+		return 'FEEDBACK_SURVEY_4'
+
+
+async def handle_feedback_step_4(event: SimpleBotEvent):
+	user_id, msg, user_info = await get_initial_data(event)
+	if verify_fsm_break(msg):
+		text = f'{user_info["first_name"]} {CANCELLATION_FEEDBACK}'
+		await send_message(event, msg=text)
+		await send_menu(event, user_info)
+		return 'START'
+	elif msg not in [i.lower() for i in FEEDBACK_BUTTONS]:
+		text = f'''
+				{user_info['first_name']}, данный пункт обязателен к заполнению.
+				Укажите вариант, либо отмените заполнение анкеты.
+				3. Правильно ли ваш мастер понял, что вы хотите?
+				'''
+		await send_message(event, msg=dedent(text), buttons='feedback')
+		return 'FEEDBACK_SURVEY_4'
+	else:
+		feedback_msg = await storage.get(Key(f'{user_id}_feedback')) + f'Правильно ли мастер понял: {msg}\n'
+		await storage.put(Key(f'{user_id}_feedback'), feedback_msg)
+		text = f'''
+				4. На сколько ваши ожидания совпали с результатом работы?
+				Оцените по шкале от 1 до 10, где:
+				10 - полностью совпали
+				1 - совсем не то, что ожидала
+				'''
+		await send_message(event, msg=dedent(text), buttons='feedback_assessment')
+		return 'FEEDBACK_SURVEY_5'
+
+
+async def handle_feedback_step_5(event: SimpleBotEvent):
+	user_id, msg, user_info = await get_initial_data(event)
+	if verify_fsm_break(msg):
+		text = f'{user_info["first_name"]} {CANCELLATION_FEEDBACK}'
+		await send_message(event, msg=text)
+		await send_menu(event, user_info)
+		return 'START'
+	elif msg not in [str(i) for i in range(1, 11)]:
+		text = f'''
+				{user_info['first_name']}, данный пункт обязателен к заполнению.
+				Укажите вариант, либо отмените заполнение анкеты.
+				4. На сколько ваши ожидания совпали с результатом работы?
+				Оцените по шкале от 1 до 10, где:
+				10 - полностью совпали
+				1 - совсем не то, что ожидала
+				'''
+		await send_message(event, msg=dedent(text), buttons='feedback_assessment')
+		return 'FEEDBACK_SURVEY_5'
+	else:
+		feedback_msg = await storage.get(Key(f'{user_id}_feedback')) + f'Оценка ожидания: {msg}\n'
+		await storage.put(Key(f'{user_id}_feedback'), feedback_msg)
+		text = '5. Вы планируете посетить наш салон снова?'
+		await send_message(event, msg=text, buttons='feedback')
+		return 'FEEDBACK_SURVEY_6'
+
+
+async def handle_feedback_step_6(event: SimpleBotEvent):
+	user_id, msg, user_info = await get_initial_data(event)
+	if verify_fsm_break(msg):
+		text = f'{user_info["first_name"]} {CANCELLATION_FEEDBACK}'
+		await send_message(event, msg=text)
+		await send_menu(event, user_info)
+		return 'START'
+	elif msg not in [i.lower() for i in FEEDBACK_BUTTONS]:
+		text = f'''
+				{user_info['first_name']}, данный пункт обязателен к заполнению.
+				Укажите вариант, либо отмените заполнение анкеты.
+				5. Вы планируете посетить наш салон снова?
+				'''
+		await send_message(event, msg=dedent(text), buttons='feedback')
+		return 'FEEDBACK_SURVEY_6'
+	else:
+		feedback_msg = await storage.get(Key(f'{user_id}_feedback')) + f'Планирует посетить снова: {msg}\n'
+		await storage.put(Key(f'{user_id}_feedback'), feedback_msg)
+		text = f'''
+				6. {user_info["first_name"]}, порекомендуете ли вы наш салон своим друзьям и близким?
+				Оцените по шкале от 1 до 10, где:
+				10 - непременно порекомендую
+				1 - непременно не порекомендую
+				'''
+		await send_message(event, msg=dedent(text), buttons='feedback_assessment')
+		return 'FEEDBACK_SURVEY_7'
+
+
+async def handle_feedback_step_7(event: SimpleBotEvent):
+	user_id, msg, user_info = await get_initial_data(event)
+	if verify_fsm_break(msg):
+		text = f'{user_info["first_name"]} {CANCELLATION_FEEDBACK}'
+		await send_message(event, msg=text)
+		await send_menu(event, user_info)
+		return 'START'
+	elif msg not in [str(i) for i in range(1, 11)]:
+		text = f'''
+				{user_info["first_name"]}, данный пункт обязателен к заполнению.
+				Укажите вариант, либо отмените заполнение анкеты.
+				6. Порекомендуете ли вы наш салон своим друзьям и близким?
+				Оцените по шкале от 1 до 10, где:
+				10 - непременно порекомендую
+				1 - непременно не порекомендую
+				'''
+		await send_message(event, msg=dedent(text), buttons='feedback_assessment')
+		return 'FEEDBACK_SURVEY_7'
+	else:
+		feedback_msg = await storage.get(Key(f'{user_id}_feedback')) + f'Вероятность рекомендации: {msg}\n'
+		await storage.put(Key(f'{user_id}_feedback'), feedback_msg)
+		text = f'''
+				{user_info["first_name"]}, Вы можете оставить свои пожелания в произвольной форме.
+				Либо пропустите данный пункт
+				'''
+		await send_message(event, msg=dedent(text), buttons='feedback_continue')
+		return 'FEEDBACK_SURVEY_8'
+
+
+async def handle_feedback_step_8(event: SimpleBotEvent):
+	user_id, msg, user_info = await get_initial_data(event)
+	if verify_fsm_break(msg):
+		text = f'{user_info["first_name"]} {CANCELLATION_FEEDBACK}'
+		await send_message(event, msg=text)
+		await send_menu(event, user_info)
+		return 'START'
+	else:
+		feedback_msg = await storage.get(Key(f'{user_id}_feedback')) + f'Произвольное: {msg}'
+		await storage.delete(Key(f'{user_id}_feedback'))
+		api = event.api_ctx
+		text = f'''
+				Спасибо, {user_info["first_name"]} за ваши ответы.
+				Мы обязательно учтем ваше мнение, чтобы сделать наши услуги еще лучше.
+				'''
+		await send_message(event, msg=dedent(text))
+		msg_head = f'FEEDBACK:\n'
+		await api.messages.send(
+			random_id=random.randint(0, 1000),
+			user_ids=os.environ['ADMIN_IDS'].split(),
+			message=msg_head + feedback_msg
+		)
+
+		return 'START'
+
+
+# Общий хэндлер
 async def handle_users_reply(event: SimpleBotEvent):
 	global USER_MSG
 	user_id = event.user_id
@@ -348,6 +557,14 @@ async def handle_users_reply(event: SimpleBotEvent):
 		'TRAINING_SURVEY_4': handle_training_survey_step_4,
 		'TRAINING_SURVEY_5': handle_training_survey_step_5,
 		'TRAINING_SURVEY_6': handle_training_survey_step_6,
+		'FEEDBACK_SURVEY_1': handle_feedback_step_1,
+		'FEEDBACK_SURVEY_2': handle_feedback_step_2,
+		'FEEDBACK_SURVEY_3': handle_feedback_step_3,
+		'FEEDBACK_SURVEY_4': handle_feedback_step_4,
+		'FEEDBACK_SURVEY_5': handle_feedback_step_5,
+		'FEEDBACK_SURVEY_6': handle_feedback_step_6,
+		'FEEDBACK_SURVEY_7': handle_feedback_step_7,
+		'FEEDBACK_SURVEY_8': handle_feedback_step_8,
 	}
 	state_handler = states_functions[user_state]
 	await storage.put(Key(f'{user_id}_next_state'), value=await state_handler(event))

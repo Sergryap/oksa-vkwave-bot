@@ -229,3 +229,13 @@ async def send_discount(event: SimpleBotEvent, user_info):
 async def send_menu(event: SimpleBotEvent, user_info):
     text = "Выберите ниже:"
     await send_message(event, msg=text, buttons='start')
+
+
+async def send_feedback_start(event: SimpleBotEvent, user_info):
+    text = f'''
+            {user_info['first_name']}, были у нас на услуге?
+            Оставьте свое мнение, заполните анкету ниже.
+            Мы обязательно учтем ваши пожелания, чтобы сделать наш сервис еще лучше.
+            '''
+    await send_message(event, msg=dedent(text), buttons='training_buttons')
+
