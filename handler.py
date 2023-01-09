@@ -187,7 +187,7 @@ async def handle_discount_step_6(event: SimpleBotEvent):
 
 
 # далее идут шаги по заполнению анкеты на обучение
-async def handle_training_survey_step_1(event: SimpleBotEvent):
+async def handle_training_step_1(event: SimpleBotEvent):
 	user_id, msg, user_info = await get_initial_data(event)
 	if verify_fsm_start(msg):
 		text = get_training_step(user_info)['step_1']['true']
@@ -206,7 +206,7 @@ async def handle_training_survey_step_1(event: SimpleBotEvent):
 		return 'START'
 
 
-async def handle_training_survey_step_2(event: SimpleBotEvent):
+async def handle_training_step_2(event: SimpleBotEvent):
 	user_id, msg, user_info = await get_initial_data(event)
 	if verify_fsm_break(msg):
 		text = f'{user_info["first_name"]} {CANCELLATION_MSG_TR_SURVEY}'
@@ -225,7 +225,7 @@ async def handle_training_survey_step_2(event: SimpleBotEvent):
 		return 'TRAINING_SURVEY_3'
 
 
-async def handle_training_survey_step_3(event: SimpleBotEvent):
+async def handle_training_step_3(event: SimpleBotEvent):
 	user_id, msg, user_info = await get_initial_data(event)
 	if verify_fsm_break(msg):
 		text = f'{user_info["first_name"]} {CANCELLATION_MSG_TR_SURVEY}'
@@ -240,7 +240,7 @@ async def handle_training_survey_step_3(event: SimpleBotEvent):
 		return 'TRAINING_SURVEY_4'
 
 
-async def handle_training_survey_step_4(event: SimpleBotEvent):
+async def handle_training_step_4(event: SimpleBotEvent):
 	user_id, msg, user_info = await get_initial_data(event)
 	if verify_fsm_break(msg):
 		text = f'{user_info["first_name"]} {CANCELLATION_MSG_TR_SURVEY}'
@@ -259,7 +259,7 @@ async def handle_training_survey_step_4(event: SimpleBotEvent):
 		return 'TRAINING_SURVEY_4'
 
 
-async def handle_training_survey_step_5(event: SimpleBotEvent):
+async def handle_training_step_5(event: SimpleBotEvent):
 	user_id, msg, user_info = await get_initial_data(event)
 	if verify_fsm_break(msg):
 		text = f'{user_info["first_name"]} {CANCELLATION_MSG_TR_SURVEY}'
@@ -274,7 +274,7 @@ async def handle_training_survey_step_5(event: SimpleBotEvent):
 		return 'TRAINING_SURVEY_6'
 
 
-async def handle_training_survey_step_6(event: SimpleBotEvent):
+async def handle_training_step_6(event: SimpleBotEvent):
 	user_id, msg, user_info = await get_initial_data(event)
 	if verify_fsm_break(msg):
 		text = f'{user_info["first_name"]} {CANCELLATION_MSG_TR_SURVEY}'
@@ -491,12 +491,12 @@ async def handle_users_reply(event: SimpleBotEvent):
 		'DISCOUNT_SURVEY_4': handle_discount_step_4,
 		'DISCOUNT_SURVEY_5': handle_discount_step_5,
 		'DISCOUNT_SURVEY_6': handle_discount_step_6,
-		'TRAINING_SURVEY_1': handle_training_survey_step_1,
-		'TRAINING_SURVEY_2': handle_training_survey_step_2,
-		'TRAINING_SURVEY_3': handle_training_survey_step_3,
-		'TRAINING_SURVEY_4': handle_training_survey_step_4,
-		'TRAINING_SURVEY_5': handle_training_survey_step_5,
-		'TRAINING_SURVEY_6': handle_training_survey_step_6,
+		'TRAINING_SURVEY_1': handle_training_step_1,
+		'TRAINING_SURVEY_2': handle_training_step_2,
+		'TRAINING_SURVEY_3': handle_training_step_3,
+		'TRAINING_SURVEY_4': handle_training_step_4,
+		'TRAINING_SURVEY_5': handle_training_step_5,
+		'TRAINING_SURVEY_6': handle_training_step_6,
 		'FEEDBACK_SURVEY_1': handle_feedback_step_1,
 		'FEEDBACK_SURVEY_2': handle_feedback_step_2,
 		'FEEDBACK_SURVEY_3': handle_feedback_step_3,
