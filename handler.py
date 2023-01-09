@@ -22,6 +22,11 @@ from verify import (
 	verify_fsm_start,
 	verify_training,
 )
+from messages import (
+	get_training_step,
+	get_feedback_step,
+	get_discount_step
+)
 from buttons import BTN_DISCOUNT_STEP_4, FEEDBACK_BUTTONS
 
 storage = Storage()
@@ -70,7 +75,7 @@ async def handle_main_menu(event: SimpleBotEvent):
 async def handle_discount_step_1(event: SimpleBotEvent):
 	user_id, msg, user_info = await get_initial_data(event)
 	if verify_fsm_start(msg):
-		text = f'1. {user_info["first_name"]}, оставьте пожалуйста ваш контактный номер телефона:'
+		text = get_discount_step(user_info)['step_1']['true']
 		discount_msg = f'vk: https://vk.com/id{user_id}\n'
 		await storage.put(Key(f'{user_id}_discount'), discount_msg)
 		await send_message(event, msg=text, buttons='fsm_quiz')
@@ -94,13 +99,13 @@ async def handle_discount_step_2(event: SimpleBotEvent):
 		await send_menu(event, user_info)
 		return 'START'
 	elif not verify_phone(msg):
-		text = 'Укажите номер телефона в верном формате, например: 7(999)999-99-99. Либо отмените заполнение анкеты'
+		text = get_discount_step(user_info)['step_1']['false']
 		await send_message(event, msg=text, buttons='fsm_quiz')
 		return 'DISCOUNT_SURVEY_2'
 	else:
 		discount_msg = await storage.get(Key(f'{user_id}_discount')) + f'phone: {msg}\n'
 		await storage.put(Key(f'{user_id}_discount'), discount_msg)
-		text = '2. Введите ваше имя'
+		text = get_discount_step(user_info)['step_2']['true']
 		await send_message(event, msg=text, buttons='fsm_quiz')
 		return 'DISCOUNT_SURVEY_3'
 
@@ -115,7 +120,7 @@ async def handle_discount_step_3(event: SimpleBotEvent):
 	else:
 		discount_msg = await storage.get(Key(f'{user_id}_discount')) + f'name: {msg}\n'
 		await storage.put(Key(f'{user_id}_discount'), discount_msg)
-		text = '3. Как вы нас нашли? Выберите ниже, либо напишите свой вариант'
+		text = get_discount_step(user_info)['step_3']['true']
 		await send_message(event, msg=text, buttons='search')
 		return 'DISCOUNT_SURVEY_4'
 
@@ -128,16 +133,13 @@ async def handle_discount_step_4(event: SimpleBotEvent):
 		await send_menu(event, user_info)
 		return 'START'
 	elif msg not in [msg.lower() for msg in BTN_DISCOUNT_STEP_4]:
-		text = f'''
-				{user_info["first_name"]}, данный пункт обязателен к заполнению.
-				Укажите вариант, либо отмените заполнение анкеты:
-				'''
+		text = get_discount_step(user_info)['step_3']['false']
 		await send_message(event, msg=dedent(text), buttons='search')
 		return 'DISCOUNT_SURVEY_4'
 	else:
 		discount_msg = await storage.get(Key(f'{user_id}_discount')) + f'search: {msg}\n'
 		await storage.put(Key(f'{user_id}_discount'), discount_msg)
-		text = '4. Кем вы сейчас работаете или чем занимаетесь? Выберите ниже или напишите свой вариант.'
+		text = get_discount_step(user_info)['step_4']['true']
 		await send_message(event, msg=text, buttons='what_job')
 		return 'DISCOUNT_SURVEY_5'
 
@@ -152,7 +154,7 @@ async def handle_discount_step_5(event: SimpleBotEvent):
 	else:
 		discount_msg = await storage.get(Key(f'{user_id}_discount')) + f'work: {msg}\n'
 		await storage.put(Key(f'{user_id}_discount'), discount_msg)
-		text = '5. Укажите ваш возраст, либо пропустите данный пункт.'
+		text = get_discount_step(user_info)['step_5']['true']
 		await send_message(event, msg=text, buttons='fsm_quiz')
 		return 'DISCOUNT_SURVEY_6'
 
@@ -168,10 +170,7 @@ async def handle_discount_step_6(event: SimpleBotEvent):
 		discount_msg = await storage.get(Key(f'{user_id}_discount')) + f'age: {msg}'
 		await storage.put(Key(f'{user_id}_discount'), discount_msg)
 		api = event.api_ctx
-		text = f'''
-				Спасибо, {user_info["first_name"]}, мы обязательно свяжемся с вами.
-				Сообщим всю необходимую информацию и подберем удобное время для записи со скидкой.
-				'''
+		text = get_discount_step(user_info)['step_6']['true']
 		await send_message(event, msg=dedent(text))
 		msg_head = f'АНКЕТА НА СКИДКУ:\n'
 		await api.messages.send(
@@ -182,10 +181,7 @@ async def handle_discount_step_6(event: SimpleBotEvent):
 		await storage.delete(Key(f'{user_id}_discount'))
 		return 'START'
 	else:
-		text = f'''
-				{user_info["first_name"]}, укажите правильное значение, или пропустите данный пункт.
-				Либо отмените заполнение анкеты.
-				'''
+		text = get_discount_step(user_info)['step_5']['false']
 		await send_message(event, msg=dedent(text), buttons='fsm_quiz')
 		return 'DISCOUNT_SURVEY_6'
 
@@ -194,7 +190,7 @@ async def handle_discount_step_6(event: SimpleBotEvent):
 async def handle_training_survey_step_1(event: SimpleBotEvent):
 	user_id, msg, user_info = await get_initial_data(event)
 	if verify_fsm_start(msg):
-		text = f'1. {user_info["first_name"]}, оставьте пожалуйста ваш контактный номер телефона:'
+		text = get_training_step(user_info)['step_1']['true']
 		training_survey_msg = f'vk: https://vk.com/id{user_id}\n'
 		await storage.put(Key(f'{user_id}_training_survey'), training_survey_msg)
 		await send_message(event, msg=text, buttons='fsm_quiz')
@@ -218,13 +214,13 @@ async def handle_training_survey_step_2(event: SimpleBotEvent):
 		await send_menu(event, user_info)
 		return 'START'
 	elif not verify_phone(msg):
-		text = 'Укажите номер телефона в верном формате, например: 7(999)999-99-99. Либо отмените заполнение анкеты'
+		text = get_training_step(user_info)['step_1']['false']
 		await send_message(event, msg=text, buttons='fsm_quiz')
 		return 'TRAINING_SURVEY_2'
 	else:
 		training_survey_msg = await storage.get(Key(f'{user_id}_training_survey')) + f'phone: {msg}\n'
 		await storage.put(Key(f'{user_id}_training_survey'), training_survey_msg)
-		text = '2. Введите ваше имя'
+		text = get_training_step(user_info)['step_2']['true']
 		await send_message(event, msg=text, buttons='fsm_quiz')
 		return 'TRAINING_SURVEY_3'
 
@@ -239,7 +235,7 @@ async def handle_training_survey_step_3(event: SimpleBotEvent):
 	else:
 		training_survey_msg = await storage.get(Key(f'{user_id}_training_survey')) + f'name: {msg}\n'
 		await storage.put(Key(f'{user_id}_training_survey'), training_survey_msg)
-		text = '3. Вы уже имеете опыт в наращивании ресниц?'
+		text = get_training_step(user_info)['step_3']['true']
 		await send_message(event, msg=text, buttons='practic_extention')
 		return 'TRAINING_SURVEY_4'
 
@@ -254,15 +250,11 @@ async def handle_training_survey_step_4(event: SimpleBotEvent):
 	elif msg in ['да', 'нет']:
 		training_survey_msg = await storage.get(Key(f'{user_id}_training_survey')) + f'practice: {msg}\n'
 		await storage.put(Key(f'{user_id}_training_survey'), training_survey_msg)
-		text = '4. Кем вы сейчас работаете или чем занимаетесь? Выберите ниже или напишите свой вариант.'
+		text = get_training_step(user_info)['step_4']['true']
 		await send_message(event, msg=text, buttons='what_job')
 		return 'TRAINING_SURVEY_5'
 	else:
-		text = f'''
-				{user_info["first_name"]}, данный пункт обязателен к заполнению.
-				Укажите вариант, либо отмените заполнение анкеты.
-				Вы уже имеете опыт в наращивании ресниц?
-				'''
+		text = get_training_step(user_info)['step_3']['false']
 		await send_message(event, msg=dedent(text), buttons='practic_extention')
 		return 'TRAINING_SURVEY_4'
 
@@ -277,7 +269,7 @@ async def handle_training_survey_step_5(event: SimpleBotEvent):
 	else:
 		training_survey_msg = await storage.get(Key(f'{user_id}_training_survey')) + f'work: {msg}\n'
 		await storage.put(Key(f'{user_id}_training_survey'), training_survey_msg)
-		text = '5. Укажите ваш возраст, либо пропустите данный пункт.'
+		text = get_training_step(user_info)['step_5']['true']
 		await send_message(event, msg=text, buttons='fsm_quiz')
 		return 'TRAINING_SURVEY_6'
 
@@ -293,10 +285,7 @@ async def handle_training_survey_step_6(event: SimpleBotEvent):
 		training_survey_msg = await storage.get(Key(f'{user_id}_training_survey')) + f'age: {msg}'
 		await storage.delete(Key(f'{user_id}_training_survey'))
 		api = event.api_ctx
-		text = f'''
-				Спасибо, {user_info["first_name"]}, мы обязательно свяжемся с вами.
-				Сообщим всю необходимую информацию о наших курсах и подберем подходящий Вам вариант.
-				'''
+		text = get_training_step(user_info)['step_6']['true']
 		await send_message(event, msg=dedent(text))
 		msg_head = f'АНКЕТА НА ОБУЧЕНИЕ:\n'
 		await api.messages.send(
@@ -306,10 +295,7 @@ async def handle_training_survey_step_6(event: SimpleBotEvent):
 		)
 		return 'START'
 	else:
-		text = f'''
-				{user_info["first_name"]}, укажите правильное значение, или пропустите данный пункт.
-				Либо отмените заполнение анкеты.
-				'''
+		text = get_training_step(user_info)['step_5']['false']
 		await send_message(event, msg=dedent(text), buttons='fsm_quiz')
 		return 'TRAINING_SURVEY_6'
 
@@ -318,7 +304,7 @@ async def handle_training_survey_step_6(event: SimpleBotEvent):
 async def handle_feedback_step_1(event: SimpleBotEvent):
 	user_id, msg, user_info = await get_initial_data(event)
 	if verify_fsm_start(msg):
-		text = f'1. {user_info["first_name"]}, Ваш мастер приступил к работе вовремя?'
+		text = get_feedback_step(user_info)['step_1']['true']
 		feedback_msg = f'vk: https://vk.com/id{user_id}\n'
 		await storage.put(Key(f'{user_id}_feedback'), feedback_msg)
 		await send_message(event, msg='Ответьте на следующие вопросы, пожалуйста:', buttons='fsm_quiz')
@@ -343,17 +329,13 @@ async def handle_feedback_step_2(event: SimpleBotEvent):
 		await send_menu(event, user_info)
 		return 'START'
 	elif msg not in [i.lower() for i in FEEDBACK_BUTTONS]:
-		text = f'''
-				{user_info['first_name']}, данный пункт обязателен к заполнению.
-				Укажите вариант, либо отмените заполнение анкеты.
-				1. Ваш мастер приступил к работе вовремя?
-				'''
+		text = get_feedback_step(user_info)['step_1']['false']
 		await send_message(event, msg=dedent(text), buttons='feedback')
 		return 'FEEDBACK_SURVEY_2'
 	else:
 		feedback_msg = await storage.get(Key(f'{user_id}_feedback')) + f'Мастер приступил вовремя: {msg}\n'
 		await storage.put(Key(f'{user_id}_feedback'), feedback_msg)
-		text = '2. Считаете ли вы, что получили подробную консультацию до оказания услуги?'
+		text = get_feedback_step(user_info)['step_2']['true']
 		await send_message(event, msg=text, buttons='feedback')
 		return 'FEEDBACK_SURVEY_3'
 
@@ -366,17 +348,13 @@ async def handle_feedback_step_3(event: SimpleBotEvent):
 		await send_menu(event, user_info)
 		return 'START'
 	elif msg not in [i.lower() for i in FEEDBACK_BUTTONS]:
-		text = f'''
-				{user_info['first_name']}, данный пункт обязателен к заполнению.
-				Укажите вариант, либо отмените заполнение анкеты.
-				2. Считаете ли вы, что получили подробную консультацию до оказания услуги?
-				'''
+		text = get_feedback_step(user_info)['step_2']['false']
 		await send_message(event, msg=dedent(text), buttons='feedback')
 		return 'FEEDBACK_SURVEY_3'
 	else:
 		feedback_msg = await storage.get(Key(f'{user_id}_feedback')) + f'Консультация до: {msg}\n'
 		await storage.put(Key(f'{user_id}_feedback'), feedback_msg)
-		text = '3. Правильно ли ваш мастер понял, что вы хотите?'
+		text = get_feedback_step(user_info)['step_3']['true']
 		await send_message(event, msg=text, buttons='feedback')
 		return 'FEEDBACK_SURVEY_4'
 
@@ -389,22 +367,13 @@ async def handle_feedback_step_4(event: SimpleBotEvent):
 		await send_menu(event, user_info)
 		return 'START'
 	elif msg not in [i.lower() for i in FEEDBACK_BUTTONS]:
-		text = f'''
-				{user_info['first_name']}, данный пункт обязателен к заполнению.
-				Укажите вариант, либо отмените заполнение анкеты.
-				3. Правильно ли ваш мастер понял, что вы хотите?
-				'''
+		text = get_feedback_step(user_info)['step_3']['false']
 		await send_message(event, msg=dedent(text), buttons='feedback')
 		return 'FEEDBACK_SURVEY_4'
 	else:
 		feedback_msg = await storage.get(Key(f'{user_id}_feedback')) + f'Правильно ли мастер понял: {msg}\n'
 		await storage.put(Key(f'{user_id}_feedback'), feedback_msg)
-		text = f'''
-				4. На сколько ваши ожидания совпали с результатом работы?
-				Оцените по шкале от 1 до 10, где:
-				10 - полностью совпали
-				1 - совсем не то, что ожидала
-				'''
+		text = get_feedback_step(user_info)['step_4']['true']
 		await send_message(event, msg=dedent(text), buttons='feedback_assessment')
 		return 'FEEDBACK_SURVEY_5'
 
@@ -417,20 +386,13 @@ async def handle_feedback_step_5(event: SimpleBotEvent):
 		await send_menu(event, user_info)
 		return 'START'
 	elif msg not in [str(i) for i in range(1, 11)]:
-		text = f'''
-				{user_info['first_name']}, данный пункт обязателен к заполнению.
-				Укажите вариант, либо отмените заполнение анкеты.
-				4. На сколько ваши ожидания совпали с результатом работы?
-				Оцените по шкале от 1 до 10, где:
-				10 - полностью совпали
-				1 - совсем не то, что ожидала
-				'''
+		text = get_feedback_step(user_info)['step_4']['false']
 		await send_message(event, msg=dedent(text), buttons='feedback_assessment')
 		return 'FEEDBACK_SURVEY_5'
 	else:
 		feedback_msg = await storage.get(Key(f'{user_id}_feedback')) + f'Оценка ожидания: {msg}\n'
 		await storage.put(Key(f'{user_id}_feedback'), feedback_msg)
-		text = '5. Вы планируете посетить наш салон снова?'
+		text = get_feedback_step(user_info)['step_5']['true']
 		await send_message(event, msg=text, buttons='feedback')
 		return 'FEEDBACK_SURVEY_6'
 
@@ -443,22 +405,13 @@ async def handle_feedback_step_6(event: SimpleBotEvent):
 		await send_menu(event, user_info)
 		return 'START'
 	elif msg not in [i.lower() for i in FEEDBACK_BUTTONS]:
-		text = f'''
-				{user_info['first_name']}, данный пункт обязателен к заполнению.
-				Укажите вариант, либо отмените заполнение анкеты.
-				5. Вы планируете посетить наш салон снова?
-				'''
+		text = get_feedback_step(user_info)['step_5']['false']
 		await send_message(event, msg=dedent(text), buttons='feedback')
 		return 'FEEDBACK_SURVEY_6'
 	else:
 		feedback_msg = await storage.get(Key(f'{user_id}_feedback')) + f'Планирует посетить снова: {msg}\n'
 		await storage.put(Key(f'{user_id}_feedback'), feedback_msg)
-		text = f'''
-				6. {user_info["first_name"]}, порекомендуете ли вы наш салон своим друзьям и близким?
-				Оцените по шкале от 1 до 10, где:
-				10 - непременно порекомендую
-				1 - непременно не порекомендую
-				'''
+		text = get_feedback_step(user_info)['step_6']['true']
 		await send_message(event, msg=dedent(text), buttons='feedback_assessment')
 		return 'FEEDBACK_SURVEY_7'
 
@@ -471,23 +424,13 @@ async def handle_feedback_step_7(event: SimpleBotEvent):
 		await send_menu(event, user_info)
 		return 'START'
 	elif msg not in [str(i) for i in range(1, 11)]:
-		text = f'''
-				{user_info["first_name"]}, данный пункт обязателен к заполнению.
-				Укажите вариант, либо отмените заполнение анкеты.
-				6. Порекомендуете ли вы наш салон своим друзьям и близким?
-				Оцените по шкале от 1 до 10, где:
-				10 - непременно порекомендую
-				1 - непременно не порекомендую
-				'''
+		text = get_feedback_step(user_info)['step_6']['false']
 		await send_message(event, msg=dedent(text), buttons='feedback_assessment')
 		return 'FEEDBACK_SURVEY_7'
 	else:
 		feedback_msg = await storage.get(Key(f'{user_id}_feedback')) + f'Вероятность рекомендации: {msg}\n'
 		await storage.put(Key(f'{user_id}_feedback'), feedback_msg)
-		text = f'''
-				{user_info["first_name"]}, Вы можете оставить свои пожелания в произвольной форме.
-				Либо пропустите данный пункт
-				'''
+		text = get_feedback_step(user_info)['step_7']['true']
 		await send_message(event, msg=dedent(text), buttons='feedback_continue')
 		return 'FEEDBACK_SURVEY_8'
 
@@ -503,10 +446,7 @@ async def handle_feedback_step_8(event: SimpleBotEvent):
 		feedback_msg = await storage.get(Key(f'{user_id}_feedback')) + f'Произвольное: {msg}'
 		await storage.delete(Key(f'{user_id}_feedback'))
 		api = event.api_ctx
-		text = f'''
-				Спасибо, {user_info["first_name"]}, за ваши ответы.
-				Мы обязательно учтем ваше мнение, чтобы сделать наши услуги еще лучше.
-				'''
+		text = get_feedback_step(user_info)['step_8']['true']
 		await send_message(event, msg=dedent(text))
 		msg_head = f'FEEDBACK:\n'
 		await api.messages.send(
